@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:theme="@style/Theme.AppCompat.NoActionBar"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".WelcomeScreen"
+    android:background="@drawable/launcwall">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#50000000"
+        android:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0">
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="141dp"
+            android:elevation="8dp"
+            android:text="Click me to Start!"
+            tools:layout_editor_absoluteX="69dp"
+            tools:layout_editor_absoluteY="349dp" />
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="165dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:elevation="8dp">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/txtServer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Your IP Server..."
+                android:inputType="textUri" />
+        </android.support.design.widget.TextInputLayout>
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
