@@ -5,33 +5,40 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_home.*
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONException
 import org.json.JSONObject
+import android.app.NotificationManager
+import android.app.NotificationChannel
+import android.os.Build
+import android.support.v4.app.NotificationManagerCompat
+import android.view.View
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
+import android.widget.*
 
 
 class Home : AppCompatActivity() {
 
+    val NORMAL_CLOSURE_STATUS = 1000
+
     //private var output:TextView? = null
     private var btnLogout:Button? = null
     private var btnSound:Button? = null
-    private var btnCopyId:Button? = null
+    //private var btnCopyId:Button? = null
     private var id:Int? = null
     var session:SharedPreferences? = null
-    var txtId:TextView? = null
+    //var txtId:TextView? = null
     var txtInfo:TextView? = null
+    //var progBar:ProgressBar? = null
 
     private inner class EchoWebSocketListener: WebSocketListener() {
-
-        val NORMAL_CLOSURE_STATUS = 1000
 
         override fun onOpen(webSocket: WebSocket?, response: Response?) {
             super.onOpen(webSocket, response)
@@ -57,7 +64,17 @@ class Home : AppCompatActivity() {
 
         override fun onMessage(webSocket: WebSocket?, text: String?) {
             super.onMessage(webSocket, text)
+
+            val req = JSONObject(text)
+            val type = req.getString("type")
+
+            if(type.equals("buttonPressed")) {
+                sendNotification(type)
+            }
+
+            //progBar?.setVisibility(VISIBLE)
             output("$text")
+            //progBar?.setVisibility(INVISIBLE)
         }
 
         override fun onMessage(webSocket: WebSocket?, bytes: ByteString?) {
@@ -85,9 +102,11 @@ class Home : AppCompatActivity() {
         //Connect UI with code
         btnLogout = findViewById(R.id.btnLogout) as Button
         btnSound = findViewById(R.id.btnSound) as Button
-        btnCopyId = findViewById(R.id.btnCopyId) as Button
-        txtId = findViewById(R.id.txtId) as TextView
+        //btnCopyId = findViewById(R.id.btnCopyId) as Button
+        //txtId = findViewById(R.id.txtId) as TextView
         txtInfo = findViewById(R.id.txtInfo) as TextView
+        //progBar = findViewById(R.id.progressBar) as ProgressBar
+
 
         //Open WebSocket
         val client = OkHttpClient()
@@ -101,12 +120,13 @@ class Home : AppCompatActivity() {
             if(id == null)
                 copyId()
 
+            Toast.makeText(this, "Ding Dong!", Toast.LENGTH_SHORT).show()
             ws.send("{\n" +
                     "  \"type\": \"soundOn\",\n" +
                     "  \"content\": {\n" +
                     "    \"id\": $id\n" +
                     "  }\n" +
-                    "}")
+            "}")
         }
 
         btnLogout!!.setOnClickListener {
@@ -116,12 +136,24 @@ class Home : AppCompatActivity() {
             editor.apply()
 
             //To Shutdown client and ws
-            ws.close(0,"Manually Closed")
+            ws.close(NORMAL_CLOSURE_STATUS,"Manually Closed")
             client.dispatcher().executorService().shutdown()
 
             val intent = Intent(this@Home, WelcomeScreen::class.java)
             startActivity(intent)
         }
+    }
+
+
+    private fun sendNotification(message: String?) {
+
+        val mBuilder = NotificationCompat.Builder(this, "default")
+                .setContentTitle("My notification")
+                .setContentText("$message")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(1, mBuilder.build())
     }
 
     //Copy to Info
