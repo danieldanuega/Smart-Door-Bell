@@ -59,6 +59,7 @@ class Home : AppCompatActivity() {
             webSocket?.send("{\n" +
                     "  \"type\": \"register\",\n" +
                     "  \"content\": {\n" +
+                    "    \"id\": 88,\n" +
                     "    \"type\": \"client\"\n" +
                     "  }\n" +
                     "}")
@@ -82,7 +83,7 @@ class Home : AppCompatActivity() {
             val type:String = req.getString("type")
 
             if(type.equals("buttonPressed")) {
-                sendNotification(type)
+                sendNotification("Someone knock your door!")
             }
 
             //progBar?.setVisibility(VISIBLE)
@@ -189,7 +190,7 @@ class Home : AppCompatActivity() {
             notificationManager.createNotificationChannel(notificationChannel)
 
             builder = Notification.Builder(this,channelId)
-                    .setContentTitle("Home IoT")
+                    .setContentTitle("Smart Door Bell")
                     .setContentText("$message")
                     .setSmallIcon(R.drawable.ic_launcher_round)
                     .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.ic_launcher))
@@ -198,7 +199,7 @@ class Home : AppCompatActivity() {
         } else {
 
             builder = Notification.Builder(this)
-                    .setContentTitle("Home IoT")
+                    .setContentTitle("Smart Door Bell")
                     .setContentText("$message")
                     .setSmallIcon(R.drawable.ic_launcher_round)
                     .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.ic_launcher))
