@@ -1,9 +1,11 @@
 package com.uajy.ioteam.smartdoorbell
 
-import android.app.Activity
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AppCompatActivity
@@ -14,9 +16,9 @@ import okhttp3.*
 import okio.ByteString
 import org.json.JSONException
 import org.json.JSONObject
-import android.app.NotificationManager
-import android.app.NotificationChannel
+import android.graphics.Color
 import android.os.Build
+import android.os.Message
 import android.support.v4.app.NotificationManagerCompat
 import android.view.View
 import android.view.View.INVISIBLE
@@ -30,13 +32,24 @@ class Home : AppCompatActivity() {
 
     //private var output:TextView? = null
     private var btnLogout:Button? = null
-    private var btnSound:Button? = null
+    private var btnSound:ImageView? = null
+    private var btnMessage:Button? = null
     //private var btnCopyId:Button? = null
     private var id:Int? = null
     var session:SharedPreferences? = null
     //var txtId:TextView? = null
     var txtInfo:TextView? = null
+    var txtMessage:TextView? = null
     //var progBar:ProgressBar? = null
+
+    //NOTIFICATION
+    lateinit var notificationManager: NotificationManager
+    lateinit var notificationChannel: NotificationChannel
+    lateinit var builder : Notification.Builder
+    private val channelId = "com.uajy.ioteam.smartdoorbell"
+    private val description = "Test Notification"
+
+
 
     private inner class EchoWebSocketListener: WebSocketListener() {
 
@@ -44,11 +57,11 @@ class Home : AppCompatActivity() {
             super.onOpen(webSocket, response)
 
             webSocket?.send("{\n" +
-                "  \"type\": \"register\",\n" +
-                "  \"content\": {\n" +
-                "    \"type\": \"client\"\n" +
-                "  }\n" +
-                "}")
+                    "  \"type\": \"register\",\n" +
+                    "  \"content\": {\n" +
+                    "    \"type\": \"client\"\n" +
+                    "  }\n" +
+                    "}")
         }
 
         override fun onFailure(webSocket: WebSocket?, t: Throwable?, response: Response?) {
@@ -66,7 +79,7 @@ class Home : AppCompatActivity() {
             super.onMessage(webSocket, text)
 
             val req = JSONObject(text)
-            val type = req.getString("type")
+            val type:String = req.getString("type")
 
             if(type.equals("buttonPressed")) {
                 sendNotification(type)
@@ -93,6 +106,9 @@ class Home : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        //Notification
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         //Session
         session = this.getSharedPreferences("Session", Context.MODE_PRIVATE)
         /*val editor = session!!.edit()
@@ -101,9 +117,10 @@ class Home : AppCompatActivity() {
 
         //Connect UI with code
         btnLogout = findViewById(R.id.btnLogout) as Button
-        btnSound = findViewById(R.id.btnSound) as Button
+        btnSound = findViewById(R.id.btnSound) as ImageView
+        btnMessage = findViewById(R.id.btnMessage) as Button
         //btnCopyId = findViewById(R.id.btnCopyId) as Button
-        //txtId = findViewById(R.id.txtId) as TextView
+        txtMessage = findViewById(R.id.txtMessage) as TextView
         txtInfo = findViewById(R.id.txtInfo) as TextView
         //progBar = findViewById(R.id.progressBar) as ProgressBar
 
@@ -142,18 +159,53 @@ class Home : AppCompatActivity() {
             val intent = Intent(this@Home, WelcomeScreen::class.java)
             startActivity(intent)
         }
+
+        btnMessage!!.setOnClickListener {
+
+            if(id == null)
+                copyId()
+
+            ws.send("{\n" +
+                    "  \"type\": \"setText\",\n" +
+                    "  \"content\": {\n" +
+                    "    \"id\": $id,\n" +
+                    "    \"text\": \"${txtMessage?.text.toString()}\"\n" +
+                    "  }\n" +
+                    "}")
+        }
     }
 
 
     private fun sendNotification(message: String?) {
 
-        val mBuilder = NotificationCompat.Builder(this, "default")
-                .setContentTitle("My notification")
-                .setContentText("$message")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        val intent = Intent(this, Home::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(1, mBuilder.build())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationChannel = NotificationChannel(channelId,description,NotificationManager.IMPORTANCE_HIGH)
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.BLACK
+            notificationChannel.enableVibration(true)
+            notificationManager.createNotificationChannel(notificationChannel)
+
+            builder = Notification.Builder(this,channelId)
+                    .setContentTitle("Home IoT")
+                    .setContentText("$message")
+                    .setSmallIcon(R.drawable.ic_launcher_round)
+                    .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.ic_launcher))
+                    .setContentIntent(pendingIntent)
+
+        } else {
+
+            builder = Notification.Builder(this)
+                    .setContentTitle("Home IoT")
+                    .setContentText("$message")
+                    .setSmallIcon(R.drawable.ic_launcher_round)
+                    .setLargeIcon(BitmapFactory.decodeResource(this.resources,R.drawable.ic_launcher))
+                    .setContentIntent(pendingIntent)
+        }
+
+        notificationManager.notify(13,builder.build())
     }
 
     //Copy to Info
